@@ -7,6 +7,7 @@ from web3 import Web3
 amount = Web3.toWei(0.1, "ether")
 
 def main():
+    print(f"Current active network is: {network.show_active()}\n")
     account = get_account()
     erc20_address = config["networks"][network.show_active()]["weth_token"]
     # get_weth()
@@ -16,19 +17,21 @@ def main():
     # ABI
     # Address
     lending_pool = get_lending_pool()
+    print("Found AAVE lendingpool!\n")
     
     # approve ERC20
     approve_erc20(amount, lending_pool.address, erc20_address, account)
-    print("Depositing...")
+    print("Depositing 0.1 ETH...\n")
     tx = lending_pool.deposit(erc20_address, amount, account.address, 0, {"from": account})
     tx.wait(1)
-    print("Deposited!")
+    print("Deposited 0.1 ETH!\n")
     borrowable_eth, total_debt = get_borrowable_data(lending_pool, account)
-    print(f"active network: {network.show_active()}")
     # find amount to borrow, at 5% to max
+    print("Fetching DAI/ETH price...\n")
     dai_eth_price = get_asset_data(config["networks"][network.show_active()]["dai_eth_pair"])
-    amount_to_borrow = (1/dai_eth_price) * borrowable_eth * 0.95
-    print(f"Borrowing 95% of max allowed, {amount_to_borrow} DAI...")
+    print(f"Current DAI/ETH price is {dai_eth_price}.\n")
+    amount_to_borrow = (1/dai_eth_price) * borrowable_eth * 0.50
+    print(f"Now borrowing 50% of max allowed, {amount_to_borrow} DAI...\n")
 
     dai_token = config["networks"][network.show_active()]["dai_token"]
     borrow_tx = lending_pool.borrow(
@@ -40,15 +43,18 @@ def main():
         {"from": account},
         )
     borrow_tx.wait(1)
-    print(f"Borrowed {amount_to_borrow} DAI!")
-    print("Now repaying the debt...")
+    print(f"Borrowed {amount_to_borrow} DAI!\n")
+    print("Now repaying the debt...\n")
+    repay_all(amount, lending_pool, account)
+    print(f"Repaid all DAI!\n")
 
-    repay_all(lending_pool, amount, account)
-    print("Now withdrawing...")
+    print("This is current status...\n")
+    get_borrowable_data(lending_pool, account)
 
-    withdraw_amount = Web3.toWei(0.00001, "ether")
-    withdraw_some(lending_pool, withdraw_amount, account)
-    print("All finished.")
+    #print("Now withdrawing WETH back...\n")
+    #withdraw_amount = Web3.toWei(0.00001, "ether")
+    #withdraw_some(lending_pool, withdraw_amount, account)
+    print("All finished, bye!\n")
 
 def withdraw_some(lending_pool, withdraw_amount, account):
     # no need to approve_erc20 since you're the spender
@@ -63,7 +69,7 @@ def withdraw_some(lending_pool, withdraw_amount, account):
     withdraw_amount_in_eth = Web3.fromWei(withdraw_amount, "ether")
     print(f"Done withdrawing {withdraw_amount} Wei, which is {withdraw_amount_in_eth} ETH.")
 
-def repay_all(lending_pool, amount, account):
+def repay_all(amount, lending_pool, account):
     approve_erc20(
         Web3.toWei(amount, "ether"),
         lending_pool,
@@ -78,13 +84,11 @@ def repay_all(lending_pool, amount, account):
         {"from": account},
     )
     repay_tx.wait(1)
-    print(f"Repaid all DAI!")
 
 def get_asset_data(price_feed_address):
     dai_eth_price_feed = interface.AggregatorV3Interface(price_feed_address)
     latest_price = dai_eth_price_feed.latestRoundData()[1]
     converted_latest_price = Web3.fromWei(latest_price, "ether")
-    print(f"The DAI/ETH price is {converted_latest_price}")
     return float(converted_latest_price)
 
 def get_borrowable_data(lending_pool, account):
@@ -107,11 +111,11 @@ def get_borrowable_data(lending_pool, account):
 def approve_erc20(amount, spender, erc20_address, account):
     # ABI
     # Address
-    print("Approving ERC20 token...")
+    print("Approving ERC20 token...\n")
     erc20 = interface.IERC20(erc20_address)
     tx = erc20.approve(spender, amount, {"from": account})
     tx.wait(1)
-    print("Approved!")
+    print("Approved!\n")
     return tx
 
 def get_lending_pool():
