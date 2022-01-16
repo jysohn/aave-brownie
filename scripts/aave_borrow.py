@@ -19,7 +19,13 @@ def main():
     # ABI
     # Address
     lending_pool = get_lending_pool()
-    print("Found AAVE lendingpool!\n")
+    print("Found AAVE lending pool!\n")
+    print("Checking if the lending pool is paused...\n")
+    if (lending_pool.paused()):
+        print("Lending pool is paused; exiting now.")
+        exit()
+    print("Lending pool is live, carrying on...\n")
+
     print("Initial borrow data...\n")
     get_borrowable_data(lending_pool, account)
     
@@ -64,7 +70,7 @@ def main():
     print(f"Repaid all DAI!\n")
 
     print("This is current status...\n")
-    get_borrowable_data(lending_pool, account)
+    borrowable_eth, total_debt, total_collateral_eth = get_borrowable_data(lending_pool, account)
 
     print("Now withdrawing WETH back...\n")
     withdraw_all(lending_pool, total_collateral_eth, account)
@@ -72,6 +78,9 @@ def main():
 
     print("This is final status...\n")
     get_borrowable_data(lending_pool, account)
+
+    #print("Finishing up by converting WETH back to ETH...")
+    #get_eth() / create get_eth.py
 
     print("All finished, bye!\n")
 
