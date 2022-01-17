@@ -1,6 +1,6 @@
 from brownie import config, network, interface
 from scripts.helpful_scripts import get_account
-from scripts.get_weth import get_weth
+from scripts.get_weth import get_weth, withdraw_eth
 from decimal import Decimal
 from web3 import Web3
 
@@ -79,8 +79,8 @@ def main():
     print("This is final status...\n")
     get_borrowable_data(lending_pool, account)
 
-    #print("Finishing up by converting WETH back to ETH...")
-    #get_eth() / create get_eth.py
+    print("Finishing up by converting 0.01 WETH back to ETH...")
+    withdraw_eth(account, unit)
 
     print("All finished, bye!\n")
 
@@ -89,7 +89,8 @@ def withdraw_all(lending_pool, withdraw_amount, account):
 
     withdraw_tx = lending_pool.withdraw(
         config["networks"][network.show_active()]["weth_token"],
-        Web3.toWei(Decimal(str(withdraw_amount)), "ether"),
+        #Web3.toWei(Decimal(str(withdraw_amount)), "ether"),
+        Web3.toWei(0.001, "ether"),
         account.address,
         {"from": account}
     )
